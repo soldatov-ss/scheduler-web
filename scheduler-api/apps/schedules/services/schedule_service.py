@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, DefaultDict
+from typing import Any
 from ..enums import WeekdayEnum
 from ..models import Schedule, TimeSlot
 
