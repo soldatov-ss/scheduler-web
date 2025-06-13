@@ -60,18 +60,3 @@ class TimeSlot(TimeStampedModel):
         self.clean()
         super().save(*args, **kwargs)
 
-    @property
-    def weekday_name(self):
-        return dict(self.WEEKDAYS)[self.weekday].lower()
-
-
-
-class TimeSlotSeries(models.Model):
-    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE)
-    weekday = models.IntegerField(choices=TimeSlot.WEEKDAYS)
-    time_point = models.TimeField()
-    ids = ArrayField(models.IntegerField(), default=list)
-
-    class Meta:
-        db_table = 'time_slot_series'
-        unique_together = ['schedule', 'weekday', 'time_point']
