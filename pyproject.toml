@@ -1,0 +1,99 @@
+[project]
+name = "scheduler-web"
+version = "0.1.0"
+description = "Scheduler API"
+readme = "README.md"
+requires-python = ">=3.13"
+
+# Core application dependencies
+dependencies = [
+    "django>=5.2",
+    "dj-rest-auth==7.0.1",
+    "django-configurations==2.5.1",
+    "django-cors-headers==4.7.0",
+    "django-filter==25.1",
+    "django-model-utils==5.0.0",
+    "django-redis>=5.4.0",
+    "django-storages==1.14.6",
+    "django-unique-upload==0.2.1",
+    "djangorestframework>=3.16.0",
+    "djangorestframework-api-key==3.1.0",
+    "djangorestframework-simplejwt==5.5.0",
+    "gunicorn==23.0.0",
+    "pillow~=11.2",
+    "psycopg2-binary==2.9.10",
+    "pydantic>=2.11.5",
+    "python-dotenv==1.1.0",
+    "requests==2.32.3",
+    "setuptools>=80.9",
+]
+
+[dependency-groups]
+# Linting and code quality dependencies
+lint = [
+    "black==25.1.0",
+    "flake8==7.2.0",
+    "isort==6.0.1",
+    "pre-commit==4.2.0",
+    "ruff==0.11.8",
+]
+
+# dev dependencies
+dev = [
+    # Testing
+    "coverage~=7.8",
+    "pytest-django==4.11.1",
+    "factory-boy==3.3.3",
+    "drf-spectacular>=0.28.0",
+    "pytest-cov>=6.1.1",
+    # Debugging, performance tools, etc.
+    "django-silk>=5.4.0",
+    "nplusone>=1.0.0",
+    "ipdb==0.13.13",
+    "ipython>=9.3.0",
+    "mock==5.2.0",
+    "icecream>=2.1.4",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py313']
+include = '.pyi?$'
+extend-exclude = '''
+/(
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+extend_skip = [".gitignore", ".dockerignore"]
+skip = ["migrations", "venv", "__pycache__", "scripts"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+indent-width = 4
+lint.ignore = ["E501", "E712", "B904", "C408", "F841"]
+lint.exclude = [
+    'venv',  '.git',
+    '.idea',  '__pycache__',
+    'migrations/',  'scripts/'
+]
+lint.select = [
+"E",   # pycodestyle errors
+"W",   # pycodestyle warnings
+"F",   # pyflakes
+"C",   # complexity
+"N",   # pep8-naming
+"UP",  # pyupgrade
+]
+
+[tool.ruff.lint.per-file-ignores]
+"init.py" = ["F401"]  # unused imports in init.py
