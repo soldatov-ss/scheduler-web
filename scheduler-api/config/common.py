@@ -20,7 +20,7 @@ class Common(Configuration):
         "django_filters",  # for filtering rest endpoints
         "drf_spectacular",
         # Your apps
-        "scheduler-api.users",
+        "scheduler-api.apps.users",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
@@ -38,6 +38,8 @@ class Common(Configuration):
     ROOT_URLCONF = 'scheduler-api.urls'
     SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
     WSGI_APPLICATION = 'scheduler-api.wsgi.application'
+
+    APP_ENV = os.environ.get("APP_ENV")
 
     # Email
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
