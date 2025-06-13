@@ -3,21 +3,21 @@
 [![Build Status](https://travis-ci.org/soldatov-ss/scheduler-web.svg?branch=master)](https://travis-ci.org/soldatov-ss/scheduler-web)
 [![Built with](https://img.shields.io/badge/Built_with-Cookiecutter_Django_Rest-F7B633.svg)](https://github.com/agconti/cookiecutter-django-rest)
 
-Its all about a Weissman score > 5.0. Check out the project's [documentation](http://soldatov-ss.github.io/scheduler-web/).
 
-# Prerequisites
+Python Environment Setup
+1. Create and activate the virtual environment
 
-- [Docker](https://docs.docker.com/docker-for-mac/install/)  
-
-# Local Development
-
-Start the dev server for local development:
 ```bash
-docker-compose up
+uv venv
+source .venv/bin/activate
 ```
 
-Run a command inside the docker container:
-
+2. Install all dependencies (including dev and lint tools)
 ```bash
-docker-compose run --rm web [command]
+ uv sync --all-groups
+```
+
+3. Start the dev server for local development:
+```bash
+docker-compose up --build
 ```
