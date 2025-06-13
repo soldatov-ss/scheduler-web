@@ -6,16 +6,19 @@ from .models import Schedule
 
 class TimeSlotCreateSerializer(serializers.Serializer):
     start = serializers.RegexField(
-        regex=r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$',
-        help_text="Start time in HH:MM format"
+        regex=r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+        help_text="Start time in HH:MM format",
+        error_messages={"invalid": "Time must be in HH:MM format (00:00 to 23:59)"},
     )
     stop = serializers.RegexField(
-        regex=r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$',
-        help_text="Stop time in HH:MM format"
+        regex=r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+        help_text="Stop time in HH:MM format",
+        error_messages={"invalid": "Time must be in HH:MM format (00:00 to 23:59)"},
     )
     ids = serializers.ListField(
         child=serializers.IntegerField(),
-        help_text="List of integer IDs"
+        help_text="List of integer IDs",
+        error_messages={"not_a_list": "IDs must be provided as a list", "invalid": "Each ID must be an integer"},
     )
 
     def validate(self, data):
