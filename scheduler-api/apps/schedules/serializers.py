@@ -1,9 +1,7 @@
-from collections import defaultdict
-from datetime import datetime
-
+from .services import schedule_service
 from django.db import transaction
 from rest_framework import serializers
-from .models import TimeSlot, Schedule
+from .models import Schedule
 
 
 class TimeSlotCreateSerializer(serializers.Serializer):
@@ -21,15 +19,10 @@ class TimeSlotCreateSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
-        start_str = data['start']
-        stop_str = data['stop']
-
-        start_time = datetime.strptime(start_str, '%H:%M').time()
-        stop_time = datetime.strptime(stop_str, '%H:%M').time()
-
-        if start_time >= stop_time:
-            raise serializers.ValidationError("Start time must be before stop time")
-
+        try:
+            schedule_service.validate_time_slot(data['start'], data['stop'])
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
         return data
 
 
@@ -42,24 +35,7 @@ class WeeklyScheduleSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created', 'modified']
 
     def get_schedule(self, obj):
-        weekdays_map = {
-            0: 'monday', 1: 'tuesday', 2: 'wednesday', 3: 'thursday',
-            4: 'friday', 5: 'saturday', 6: 'sunday'
-        }
-
-        schedule_dict = defaultdict(list)
-        time_slots = obj.time_slots.order_by('weekday', 'start_time').all()
-
-        for slot in time_slots:
-            weekday_name = weekdays_map[slot.weekday]
-            schedule_dict[weekday_name].append({
-                'start': slot.start_time.strftime('%H:%M'),
-                'stop': slot.end_time.strftime('%H:%M'),
-                'ids': slot.ids
-            })
-
-        return schedule_dict
-
+        return schedule_service.get_schedule_dict(obj)
 
 
 class WeeklyScheduleCreateUpdateSerializer(serializers.ModelSerializer):
@@ -77,33 +53,10 @@ class WeeklyScheduleCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate_schedule(self, value):
         """Validate the schedule structure"""
-        valid_weekdays = ['monday', 'tuesday', 'wednesday', 'thursday',
-                          'friday', 'saturday', 'sunday']
-
-        for weekday, slots in value.items():
-            if weekday.lower() not in valid_weekdays:
-                raise serializers.ValidationError(
-                    f"Invalid weekday '{weekday}'. Must be one of: {valid_weekdays}"
-                )
-
-            if not isinstance(slots, list):
-                raise serializers.ValidationError(
-                    f"Slots for {weekday} must be a list"
-                )
-
-            # Validate no overlapping time slots for the same day
-            sorted_slots = sorted(slots, key=lambda x: x['start'])
-            for i in range(len(sorted_slots) - 1):
-                current_stop = datetime.strptime(sorted_slots[i]['stop'], '%H:%M').time()
-                next_start = datetime.strptime(sorted_slots[i + 1]['start'], '%H:%M').time()
-
-                if current_stop > next_start:
-                    raise serializers.ValidationError(
-                        f"Overlapping time slots found on {weekday}: "
-                        f"{sorted_slots[i]['start']}-{sorted_slots[i]['stop']} and "
-                        f"{sorted_slots[i + 1]['start']}-{sorted_slots[i + 1]['stop']}"
-                    )
-
+        try:
+            schedule_service.validate_schedule_structure(value)
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
         return value
 
     @transaction.atomic
@@ -111,7 +64,7 @@ class WeeklyScheduleCreateUpdateSerializer(serializers.ModelSerializer):
         schedule_data = validated_data.pop('schedule')
         schedule = Schedule.objects.create(**validated_data)
 
-        self._create_time_slots_with_series(schedule, schedule_data)
+        schedule_service.create_time_slots_for_schedule(schedule, schedule_data)
         return schedule
 
     @transaction.atomic
@@ -124,32 +77,8 @@ class WeeklyScheduleCreateUpdateSerializer(serializers.ModelSerializer):
 
         if schedule_data is not None:
             instance.time_slots.all().delete()
-            self._create_time_slots_with_series(instance, schedule_data)
+            schedule_service.create_time_slots_for_schedule(instance, schedule_data)
         return instance
-
-    def _create_time_slots_with_series(self, schedule, schedule_data):
-        weekday_mapping = {
-            'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3,
-            'friday': 4, 'saturday': 5, 'sunday': 6
-        }
-
-        time_slots_to_create = []
-
-        for weekday_name, slots in schedule_data.items():
-            weekday_num = weekday_mapping[weekday_name.lower()]
-
-            for slot_data in slots:
-                start_time = datetime.strptime(slot_data['start'], '%H:%M').time()
-                end_time = datetime.strptime(slot_data['stop'], '%H:%M').time()
-
-                time_slots_to_create.append(TimeSlot(
-                    schedule=schedule,
-                    weekday=weekday_num,
-                    start_time=start_time,
-                    end_time=end_time,
-                    ids=slot_data['ids']
-                ))
-        TimeSlot.objects.bulk_create(time_slots_to_create)
 
     def to_representation(self, instance):
         return WeeklyScheduleSerializer(instance, context=self.context).data
