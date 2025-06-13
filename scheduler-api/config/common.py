@@ -21,6 +21,7 @@ class Common(Configuration):
         "drf_spectacular",
         # Your apps
         "scheduler-api.apps.users",
+        "scheduler-api.apps.schedules",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
