@@ -8,6 +8,7 @@ from .development_urls import urlpatterns as development_urlpatterns
 # API v1 app URLs
 api_v1_apps_urls = [
     path("", include("scheduler-api.apps.users.urls")),
+    path("", include("scheduler-api.apps.schedules.urls")),
 ]
 
 
